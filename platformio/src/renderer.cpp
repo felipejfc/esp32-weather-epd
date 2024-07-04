@@ -22,6 +22,7 @@
 #include "config.h"
 #include "conversions.h"
 #include "display_utils.h"
+#include "driver/gpio.h"
 
 // fonts
 #include FONT_HEADER
@@ -226,7 +227,7 @@ void initDisplay()
 {
 pinMode(PIN_EPD_PWR, OUTPUT);
 digitalWrite(PIN_EPD_PWR, HIGH);
-delay(3000);
+gpio_hold_en(static_cast<gpio_num_t>(PIN_EPD_PWR));
 #ifdef DRIVER_WAVESHARE
   display.init(115200, true, 2, false);
   // remap spi for waveshare
@@ -257,7 +258,8 @@ void powerOffDisplay()
   display.hibernate(); // turns powerOff() and sets controller to deep sleep for
                        // minimum power use
   display.end();
-  digitalWrite(PIN_EPD_PWR, LOW);
+  gpio_hold_dis(static_cast<gpio_num_t>(PIN_EPD_PWR));
+  pinMode(PIN_EPD_PWR, INPUT);
   return;
 } // end initDisplay
 

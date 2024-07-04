@@ -21,6 +21,9 @@
 #include <cstdint>
 #include <Arduino.h>
 
+#define SHOULD_DEEP_SLEEP
+#define SHOULD_CALL_OWM_API
+
 // E-PAPER PANEL
 // This project supports the following E-Paper panels:
 //   DISP_BW_V2 - 7.5in e-Paper (v2)      800x480px  Black/White

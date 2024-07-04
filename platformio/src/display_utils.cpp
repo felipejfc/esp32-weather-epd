@@ -1634,14 +1634,12 @@ const char *getWifiStatusPhrase(wl_status_t status)
   }
 } // end getWifiStatusPhrase
 
-/* This function sets the builtin LED to LOW and disables it even during deep
+/* This function sets the builtin LED to HIGH (Led is inverted) and disables it even during deep
  * sleep.
  */
 void disableBuiltinLED()
 {
-  pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, LOW);
-  gpio_hold_en(static_cast<gpio_num_t>(LED_BUILTIN));
-  gpio_deep_sleep_hold_en();
+  pinMode(15, OUTPUT);
+  digitalWrite(15, HIGH);
   return;
 } // end disableBuiltinLED
