@@ -368,8 +368,8 @@ void setup()
 #endif
     drawStatusBar(statusStr, refreshTimeStr, wifiRSSI, batteryVoltage);
   } while (display.nextPage());
-  powerOffDisplay();
   #endif
+  powerOffDisplay();
 
   // DEEP SLEEP
   beginDeepSleep(startTime, &timeInfo);

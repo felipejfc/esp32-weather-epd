@@ -257,7 +257,6 @@ void powerOffDisplay()
 {
   display.hibernate(); // turns powerOff() and sets controller to deep sleep for
                        // minimum power use
-  display.end();
   gpio_hold_dis(static_cast<gpio_num_t>(PIN_EPD_PWR));
   pinMode(PIN_EPD_PWR, INPUT);
   return;
