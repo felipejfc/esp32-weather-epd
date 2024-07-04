@@ -38,9 +38,9 @@
 #include "icons/icons_196x196.h"
 
 #ifdef DISP_BW_V2
-  GxEPD2_BW<GxEPD2_750_T7,
-            GxEPD2_750_T7::HEIGHT> display(
-    GxEPD2_750_T7(PIN_EPD_CS,
+  GxEPD2_BW<GxEPD2_583_T8_WS,
+            GxEPD2_583_T8_WS::HEIGHT> display(
+    GxEPD2_583_T8_WS(PIN_EPD_CS,
                   PIN_EPD_DC,
                   PIN_EPD_RST,
                   PIN_EPD_BUSY));
@@ -224,12 +224,13 @@ void drawMultiLnString(int16_t x, int16_t y, const String &text,
  */
 void initDisplay()
 {
-  pinMode(PIN_EPD_PWR, OUTPUT);
-  digitalWrite(PIN_EPD_PWR, HIGH);
+pinMode(PIN_EPD_PWR, OUTPUT);
+digitalWrite(PIN_EPD_PWR, HIGH);
+delay(3000);
 #ifdef DRIVER_WAVESHARE
   display.init(115200, true, 2, false);
   // remap spi for waveshare
-  SPI.end();
+  //SPI.end();
   SPI.begin(PIN_EPD_SCK,
             PIN_EPD_MISO,
             PIN_EPD_MOSI,
@@ -243,9 +244,9 @@ void initDisplay()
   display.setTextSize(1);
   display.setTextColor(GxEPD_BLACK);
   display.setTextWrap(false);
-  // display.fillScreen(GxEPD_WHITE);
   display.setFullWindow();
   display.firstPage(); // use paged drawing mode, sets fillScreen(GxEPD_WHITE)
+
   return;
 } // end initDisplay
 
@@ -255,6 +256,7 @@ void powerOffDisplay()
 {
   display.hibernate(); // turns powerOff() and sets controller to deep sleep for
                        // minimum power use
+  display.end();
   digitalWrite(PIN_EPD_PWR, LOW);
   return;
 } // end initDisplay

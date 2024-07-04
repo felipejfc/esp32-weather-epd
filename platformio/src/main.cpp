@@ -16,8 +16,7 @@
  */
 
 #include <Arduino.h>
-#include <Adafruit_BME280.h>
-#include <Adafruit_Sensor.h>
+#include "bme68xLibrary.h"
 #include <Preferences.h>
 #include <time.h>
 #include <WiFi.h>
@@ -30,6 +29,7 @@
 #include "display_utils.h"
 #include "icons/icons_196x196.h"
 #include "renderer.h"
+#include "driver/gpio.h"
 #if defined(USE_HTTPS_WITH_CERT_VERIF) || defined(USE_HTTPS_WITH_CERT_VERIF)
   #include <WiFiClientSecure.h>
 #endif
@@ -48,6 +48,9 @@ Preferences prefs;
  */
 void beginDeepSleep(unsigned long &startTime, tm *timeInfo)
 {
+  #ifndef SHOULD_DEEP_SLEEP
+    return;
+  #endif
   if (!getLocalTime(timeInfo))
   {
     Serial.println(TXT_REFERENCING_OLDER_TIME_NOTICE);
@@ -121,6 +124,10 @@ void beginDeepSleep(unsigned long &startTime, tm *timeInfo)
  */
 void setup()
 {
+  pinMode(PIN_EPD_DC, OUTPUT);
+  pinMode(PIN_EPD_RST, OUTPUT);
+  pinMode(PIN_EPD_CS, OUTPUT);
+  pinMode(PIN_EPD_BUSY, INPUT);
   unsigned long startTime = millis();
   Serial.begin(115200);
 
@@ -244,6 +251,7 @@ void setup()
   }
 
   // MAKE API REQUESTS
+#ifdef SHOULD_CALL_OWM_API
 #ifdef USE_HTTP
   WiFiClient client;
 #elif defined(USE_HTTPS_NO_CERT_VERIF)
@@ -281,22 +289,41 @@ void setup()
     powerOffDisplay();
     beginDeepSleep(startTime, &timeInfo);
   }
+#endif
   killWiFi(); // WiFi no longer needed
 
   // GET INDOOR TEMPERATURE AND HUMIDITY, start BME280...
-  pinMode(PIN_BME_PWR, OUTPUT);
-  digitalWrite(PIN_BME_PWR, HIGH);
+  if (PIN_BME_PWR != -1)
+  {
+    pinMode(PIN_BME_PWR, OUTPUT);
+    digitalWrite(PIN_BME_PWR, HIGH);
+  }
   float inTemp     = NAN;
   float inHumidity = NAN;
-  Serial.print(String(TXT_READING_FROM) + " BME280... ");
-  TwoWire I2C_bme = TwoWire(0);
-  Adafruit_BME280 bme;
-
-  I2C_bme.begin(PIN_BME_SDA, PIN_BME_SCL, 100000); // 100kHz
-  if(bme.begin(BME_ADDRESS, &I2C_bme))
+  Serial.println(String(TXT_READING_FROM) + " BME680... ");
+  Wire.begin(PIN_BME_SDA, PIN_BME_SCL, 100000);
+  Bme68x bme;
+  bme.begin(BME_ADDRESS, Wire);
+  if(!bme.checkStatus())
   {
-    inTemp     = bme.readTemperature(); // Celsius
-    inHumidity = bme.readHumidity();    // %
+    bme.setTPH();
+
+    bme68xData data;
+
+    bme.setOpMode(BME68X_FORCED_MODE);
+    delayMicroseconds(bme.getMeasDur());
+
+    if (bme.fetchData()){
+      bme.getData(data);
+      inTemp     = data.temperature; // Celsius
+      inHumidity = data.humidity;    // %
+      Serial.println("Temperature: " + String(inTemp) + "°C");
+      Serial.println("Humidity: " + String(inHumidity) + "%");
+    }
+    else
+    {
+      Serial.println("Failed to fetch data from BME680");
+    }
 
     // check if BME readings are valid
     // note: readings are checked again before drawing to screen. If a reading
@@ -315,9 +342,11 @@ void setup()
   else
   {
     statusStr = "BME " + String(TXT_NOT_FOUND); // check wiring
-    Serial.println(statusStr);
+    Serial.println(statusStr + " " + String(bme.checkStatus()));
   }
-  digitalWrite(PIN_BME_PWR, LOW);
+  if (PIN_BME_PWR != -1) {
+    digitalWrite(PIN_BME_PWR, LOW);
+  }
 
   String refreshTimeStr;
   getRefreshTimeStr(refreshTimeStr, timeConfigured, &timeInfo);
@@ -326,6 +355,7 @@ void setup()
 
   // RENDER FULL REFRESH
   initDisplay();
+  #ifdef SHOULD_CALL_OWM_API
   do
   {
     drawCurrentConditions(owm_onecall.current, owm_onecall.daily[0],
@@ -339,6 +369,7 @@ void setup()
     drawStatusBar(statusStr, refreshTimeStr, wifiRSSI, batteryVoltage);
   } while (display.nextPage());
   powerOffDisplay();
+  #endif
 
   // DEEP SLEEP
   beginDeepSleep(startTime, &timeInfo);
