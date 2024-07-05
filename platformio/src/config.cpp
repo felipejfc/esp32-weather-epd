@@ -17,6 +17,7 @@
 
 #include <Arduino.h>
 #include "config.h"
+#include <esp_adc/adc_cali.h>
 
 // PINS
 // The configuration below is intended for use with the project's official 
@@ -27,14 +28,14 @@
 //       functionality.
 //
 // ADC pin used to measure battery voltage
-const uint8_t PIN_BAT_ADC  = A0; // A0 for micro-usb firebeetle
+const uint8_t PIN_BAT_ADC  = ADC_CHANNEL_5; // A5 is pin 5 in the xiao c6
 // Pins for E-Paper Driver Board
 const uint8_t PIN_EPD_BUSY = 21; // 5 for micro-usb firebeetle
 const uint8_t PIN_EPD_CS   = 0;
 const uint8_t PIN_EPD_RST  = 1;
 const uint8_t PIN_EPD_DC   = 2;
 const uint8_t PIN_EPD_SCK  = 19;
-const uint8_t PIN_EPD_MISO = 5; // 19 Master-In Slave-Out not used, as no data from display, fake pin!
+const uint8_t PIN_EPD_MISO = 4; // 19 Master-In Slave-Out not used, as no data from display, fake pin!
 const uint8_t PIN_EPD_MOSI = 18;
 const uint8_t PIN_EPD_PWR  = 20; // Irrelevant if directly connected to 3.3V
 // I2C Pins used for BME680

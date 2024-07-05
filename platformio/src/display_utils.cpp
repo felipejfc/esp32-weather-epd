@@ -103,26 +103,26 @@ uint32_t readBatteryVoltage()
         .atten = ADC_ATTEN_DB_12,
         .bitwidth = ADC_BITWIDTH_DEFAULT,
     };
-    ESP_ERROR_CHECK(adc_oneshot_config_channel(adc0_handle, ADC_CHANNEL_0, &config));
+    ESP_ERROR_CHECK(adc_oneshot_config_channel(adc0_handle, static_cast<adc_channel_t>(PIN_BAT_ADC), &config));
 
     //-------------ADC1 Calibration Init---------------//
-    adc_cali_handle_t adc1_cali_chan0_handle = NULL;
-    bool do_calibration1_chan0 = adc_calibration_init(ADC_UNIT_1, ADC_CHANNEL_0, ADC_ATTEN_DB_12, &adc1_cali_chan0_handle);
+    adc_cali_handle_t adc1_cali_chan5_handle = NULL;
+    bool do_calibration1_chan5 = adc_calibration_init(ADC_UNIT_1, static_cast<adc_channel_t>(PIN_BAT_ADC), ADC_ATTEN_DB_12, &adc1_cali_chan5_handle);
 
-    ESP_ERROR_CHECK(adc_oneshot_read(adc0_handle, ADC_CHANNEL_0, &adc_raw[0][0]));
-    ESP_LOGI(TAG, "ADC%d Channel[%d] Raw Data: %d", ADC_UNIT_1 + 1, ADC_CHANNEL_0, adc_raw[0][0]);
-    if (do_calibration1_chan0)
+    ESP_ERROR_CHECK(adc_oneshot_read(adc0_handle, static_cast<adc_channel_t>(PIN_BAT_ADC), &adc_raw[0][0]));
+    ESP_LOGI(TAG, "ADC%d Channel[%d] Raw Data: %d", ADC_UNIT_1 + 1, static_cast<adc_channel_t>(PIN_BAT_ADC), adc_raw[0][0]);
+    if (do_calibration1_chan5)
     {
-      ESP_ERROR_CHECK(adc_cali_raw_to_voltage(adc1_cali_chan0_handle, adc_raw[0][0], &voltage[0][0]));
-      ESP_LOGI(TAG, "ADC%d Channel[%d] Cali Voltage: %d mV", ADC_UNIT_1 + 1, EXAMPLE_ADC1_CHAN0, voltage[0][0]);
+      ESP_ERROR_CHECK(adc_cali_raw_to_voltage(adc1_cali_chan5_handle, adc_raw[0][0], &voltage[0][0]));
+      ESP_LOGI(TAG, "ADC%d Channel[%d] Cali Voltage: %d mV", ADC_UNIT_1 + 1, static_cast<adc_channel_t>(PIN_BAT_ADC), voltage[0][0]);
     }
 
     //Tear Down
     ESP_ERROR_CHECK(adc_oneshot_del_unit(adc0_handle));
-    if (do_calibration1_chan0) {
-        adc_calibration_deinit(adc1_cali_chan0_handle);
+    if (do_calibration1_chan5) {
+        adc_calibration_deinit(adc1_cali_chan5_handle);
     }
-    return voltage[0][0];
+    return voltage[0][0] * 2.1; // multiply by 2 because we have a divider scheme on the board, .1 of compensation
 } // end readBatteryVoltage
 
 /* Returns battery percentage, rounded to the nearest integer.
