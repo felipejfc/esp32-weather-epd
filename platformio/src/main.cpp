@@ -231,6 +231,7 @@ void setup()
       } while (display.nextPage());
     }
     powerOffDisplay();
+    delay(100);
     beginDeepSleep(startTime, &timeInfo);
   }
 

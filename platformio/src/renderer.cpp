@@ -259,6 +259,7 @@ void powerOffDisplay()
                        // minimum power use
   gpio_hold_dis(static_cast<gpio_num_t>(PIN_EPD_PWR));
   pinMode(PIN_EPD_PWR, INPUT);
+  display.end();
   return;
 } // end initDisplay
 
